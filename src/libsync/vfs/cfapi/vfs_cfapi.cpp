@@ -16,7 +16,6 @@
 
 #include <QDir>
 #include <QFile>
-#include <QMessageBox>
 
 #include "cfapiwrapper.h"
 #include "hydrationjob.h"
@@ -344,7 +343,7 @@ void VfsCfApi::requestHydration(const QString &requestId, const QString &path)
     }
 
     // All good, let's hydrate now
-    scheduleHydrationJob(requestId, relativePath);
+    scheduleHydrationJob(requestId, relativePath, record);
 }
 
 void VfsCfApi::fileStatusChanged(const QString &systemFileName, SyncFileStatus fileStatus)
@@ -353,7 +352,7 @@ void VfsCfApi::fileStatusChanged(const QString &systemFileName, SyncFileStatus f
     Q_UNUSED(fileStatus);
 }
 
-void VfsCfApi::scheduleHydrationJob(const QString &requestId, const QString &folderPath)
+void VfsCfApi::scheduleHydrationJob(const QString &requestId, const QString &folderPath, const SyncJournalFileRecord &record)
 {
     const auto jobAlreadyScheduled = std::any_of(std::cbegin(d->hydrationJobs), std::cend(d->hydrationJobs), [=](HydrationJob *job) {
         return job->requestId() == requestId || job->folderPath() == folderPath;
@@ -376,6 +375,9 @@ void VfsCfApi::scheduleHydrationJob(const QString &requestId, const QString &fol
     job->setJournal(params().journal);
     job->setRequestId(requestId);
     job->setFolderPath(folderPath);
+    job->setIsEncryptedFile(record._isE2eEncrypted || !record._e2eMangledName.isEmpty());
+    job->setEncryptedFileName(record._e2eMangledName);
+    job->setFileTotalSize(record._fileSize);
     connect(job, &HydrationJob::finished, this, &VfsCfApi::onHydrationJobFinished);
     d->hydrationJobs << job;
     job->start();

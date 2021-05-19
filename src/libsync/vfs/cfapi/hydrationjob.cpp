@@ -88,6 +88,35 @@ void OCC::HydrationJob::setFolderPath(const QString &folderPath)
     _folderPath = folderPath;
 }
 
+bool OCC::HydrationJob::isEncryptedFile() const
+{
+    return _isEncryptedFile;
+}
+
+void OCC::HydrationJob::setIsEncryptedFile(bool isEncrypted)
+{
+    _isEncryptedFile = isEncrypted;
+}
+
+QString OCC::HydrationJob::encryptedFileName() const
+{
+    return _encryptedFileName;
+}
+
+void OCC::HydrationJob::setEncryptedFileName(const QString &encryptedName)
+{
+    _encryptedFileName = encryptedName;
+}
+
+qint64 OCC::HydrationJob::fileTotalSize() const
+{
+    return _fileTotalSize;
+}
+void OCC::HydrationJob::setFileTotalSize(qint64 totalSize)
+{
+    _fileTotalSize = totalSize;
+}
+
 OCC::HydrationJob::Status OCC::HydrationJob::status() const
 {
     return _status;
@@ -215,6 +244,20 @@ void OCC::HydrationJob::finalize(OCC::VfsCfApi *vfs)
 
     record._type = ItemTypeFile;
     _journal->setFileRecord(record);
+}
+
+void OCC::HydrationJob::startServerAndWaitForConnections()
+{
+    _server = new QLocalServer(this);
+    const auto listenResult = _server->listen(_requestId);
+    if (!listenResult) {
+        qCCritical(lcHydration) << "Couldn't get server to listen" << _requestId << _localPath << _folderPath;
+        emitFinished(Error);
+        return;
+    }
+
+    qCInfo(lcHydration) << "Server ready, waiting for connections" << _requestId << _localPath << _folderPath;
+    connect(_server, &QLocalServer::newConnection, this, &HydrationJob::onNewConnection);
 }
 
 void OCC::HydrationJob::onGetFinished()

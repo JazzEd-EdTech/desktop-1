@@ -56,11 +56,26 @@ public:
     QString folderPath() const;
     void setFolderPath(const QString &folderPath);
 
+    bool isEncryptedFile() const;
+    void setIsEncryptedFile(bool isEncrypted);
+
+    QString encryptedFileName() const;
+    void setEncryptedFileName(const QString &encryptedName);
+
+    qint64 fileTotalSize() const;
+    void setFileTotalSize(qint64 totalSize);
+
     Status status() const;
 
     void start();
     void cancel();
     void finalize(OCC::VfsCfApi *vfs);
+
+public slots:
+    void slotCheckFolderId(const QStringList &list);
+    void slotFolderIdError();
+    void slotCheckFolderEncryptedMetadata(const QJsonDocument &json);
+    void slotFolderEncryptedMetadataError(const QByteArray &fileId, int httpReturnCode);
 
 signals:
     void finished(HydrationJob *job);
@@ -71,6 +86,8 @@ private:
     void onNewConnection();
     void onCancellationServerNewConnection();
     void onGetFinished();
+
+    void startServerAndWaitForConnections();
 
     AccountPtr _account;
     QString _remotePath;
