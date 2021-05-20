@@ -276,7 +276,7 @@ void AbstractNetworkJob::slotFinished()
     bool discard = finished();
     if (discard) {
         qCDebug(lcNetworkJob) << "Network job" << metaObject()->className() << "finished for" << path();
-        //deleteLater();
+        deleteLater();
     }
 }
 
@@ -353,7 +353,7 @@ void AbstractNetworkJob::onTimedOut()
     if (reply()) {
         reply()->abort();
     } else {
-        //deleteLater();
+        deleteLater();
     }
 }
 

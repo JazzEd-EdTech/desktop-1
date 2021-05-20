@@ -25,6 +25,10 @@ class GETFileJob;
 class SyncJournalDb;
 class VfsCfApi;
 
+namespace EncryptionHelper {
+class StreamingDecryptor;
+};
+
 class OWNCLOUDSYNC_EXPORT HydrationJob : public QObject
 {
     Q_OBJECT
@@ -87,8 +91,6 @@ private:
     void onCancellationServerNewConnection();
     void onGetFinished();
 
-    void startServerAndWaitForConnections();
-
     AccountPtr _account;
     QString _remotePath;
     QString _localPath;
@@ -103,6 +105,10 @@ private:
     QLocalSocket *_transferDataSocket = nullptr;
     QLocalSocket *_signalSocket = nullptr;
     GETFileJob *_job = nullptr;
+
+    QBuffer _encryptedFileBiffer;
+
+    QScopedPointer<EncryptionHelper::StreamingDecryptor> _decryptor;
     Status _status = Success;
 };
 

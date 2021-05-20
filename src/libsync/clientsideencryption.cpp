@@ -1858,7 +1858,7 @@ bool EncryptionHelper::chunkDecryption(const QByteArray &key, const QByteArray& 
     return true;
 }
 
-    EncryptionHelper::StreamingDecryptor::StreamingDecryptor(const QByteArray &key, const QByteArray& iv, qint64 totalSize) : _totalSize(totalSize)
+    EncryptionHelper::StreamingDecryptor::StreamingDecryptor(QIODevice *device, const QByteArray &key, const QByteArray& iv, qint64 totalSize) : _totalSize(totalSize), _output(device)
     {
         _ctx = new CipherCtx();
         _isInitialized = true;
@@ -1894,35 +1894,44 @@ bool EncryptionHelper::chunkDecryption(const QByteArray &key, const QByteArray& 
         }
     }
 
-    bool EncryptionHelper::StreamingDecryptor::chunkDecryption(const QByteArray &input, QByteArray &output)
+    qint64 EncryptionHelper::StreamingDecryptor::chunkDecryption(const char *input, qint64 inputLen)
     {
-        qint64 size = _decryptedSoFar + input.size() == _totalSize ? input.size() - 16 : input.size();
+        qint64 size = _decryptedSoFar + inputLen == _totalSize ? inputLen - 16 : inputLen;
 
         QByteArray out(1024 + 16 - 1, '\0');
         int len = 0;
 
         int inputPos = 0;
 
-        while(inputPos < size && _decryptedSoFar + 16 < _totalSize) {
+        auto written = 0;
+
+        while(inputPos < size) {
 
             auto toRead = size - inputPos;
             if (toRead > 1024) {
                 toRead = 1024;
             }
 
-            QByteArray data = QByteArray(input.data() + inputPos, toRead);
+            QByteArray data = QByteArray(input + inputPos, toRead);
 
             if (data.size() == 0) {
                 qCInfo(lcCse()) << "Could not read data from file";
-                return false;
+                return -1;
             }
 
             if(!EVP_DecryptUpdate(*_ctx, unsignedData(out), &len, (unsigned char *)data.constData(), data.size())) {
                 qCInfo(lcCse()) << "Could not decrypt";
-                return false;
+                return -1;
             }
 
-            output.append(out);
+            auto w = _output->write(out, len);
+
+            if (w != -1) {
+                written += w;
+                _writtenSoFar += w;
+            } else {
+                written = -1;
+            }
 
             inputPos += toRead;
 
@@ -1931,27 +1940,35 @@ bool EncryptionHelper::chunkDecryption(const QByteArray &key, const QByteArray& 
 
         qCritical() <<"_decryptedSoFar:" << _decryptedSoFar << "_totalSize:" << _totalSize;
 
-        if (_decryptedSoFar + 16 >= _totalSize) {
-            QByteArray tag = QByteArray(input.data() + input.size() - 16, 16);
+        if (_totalSize - _decryptedSoFar == 16) {
+            QByteArray tag = QByteArray(input + inputPos, 16);
 
             /* Set expected tag value. Works in OpenSSL 1.0.1d and later */
             if(!EVP_CIPHER_CTX_ctrl(*_ctx, EVP_CTRL_GCM_SET_TAG, tag.size(), (unsigned char *)tag.constData())) {
                 qCInfo(lcCse()) << "Could not set expected tag";
-                return false;
+                return -1;
             }
 
             if(1 != EVP_DecryptFinal_ex(*_ctx, unsignedData(out), &len)) {
                 qCInfo(lcCse()) << "Could finalize decryption";
-                return false;
+                return -1;
             }
-            output.append(out);
+
+            auto w = _output->write(out, len);
+
+            if (w != -1) {
+                written += w;
+                _writtenSoFar += w;
+            } else {
+                written = -1;
+            }
 
             _decryptedSoFar += 16;
 
             _isFinished = true;
         }
 
-        return true;
+        return written;
     }
 
     bool EncryptionHelper::StreamingDecryptor::isInitialized() const

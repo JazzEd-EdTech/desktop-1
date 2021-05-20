@@ -148,7 +148,7 @@ signals:
 
 private:
     EncryptedFile _encryptedInfo;
-    QScopedPointer<EncryptionHelper::StreamingDecryptor> _decryptor;
+    QSharedPointer<EncryptionHelper::StreamingDecryptor> _decryptor;
     qint64 _totalSize = 0;
     qint64 _writtenSoFar = 0;
     QBuffer _buffer;

@@ -246,20 +246,6 @@ void OCC::HydrationJob::finalize(OCC::VfsCfApi *vfs)
     _journal->setFileRecord(record);
 }
 
-void OCC::HydrationJob::startServerAndWaitForConnections()
-{
-    _server = new QLocalServer(this);
-    const auto listenResult = _server->listen(_requestId);
-    if (!listenResult) {
-        qCCritical(lcHydration) << "Couldn't get server to listen" << _requestId << _localPath << _folderPath;
-        emitFinished(Error);
-        return;
-    }
-
-    qCInfo(lcHydration) << "Server ready, waiting for connections" << _requestId << _localPath << _folderPath;
-    connect(_server, &QLocalServer::newConnection, this, &HydrationJob::onNewConnection);
-}
-
 void OCC::HydrationJob::onGetFinished()
 {
     qCInfo(lcHydration) << "GETFileJob finished" << _requestId << _folderPath << _job->reply()->error();

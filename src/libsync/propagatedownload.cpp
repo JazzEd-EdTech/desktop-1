@@ -347,9 +347,10 @@ void GETFileJob::slotReadyRead()
                              << replyStatusString()
                              << reply()->rawHeader("Content-Range") << reply()->rawHeader("Content-Length");
 
-            //emit finishedSignal();
+            emit finishedSignal();
         }
         _hasEmittedFinishedSignal = true;
+        deleteLater();
     }
 }
 
@@ -389,7 +390,7 @@ GETEncryptedFileJob::GETEncryptedFileJob(AccountPtr account, const QString &path
       _encryptedInfo(encryptedInfo),
       _totalSize(totalSize)
 {
-    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(encryptedInfo.encryptionKey, encryptedInfo.initializationVector, totalSize));
+    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(_device, encryptedInfo.encryptionKey, encryptedInfo.initializationVector, totalSize));
 }
 
 GETEncryptedFileJob::GETEncryptedFileJob(AccountPtr account, const QUrl &url, QIODevice *device,
@@ -399,7 +400,7 @@ GETEncryptedFileJob::GETEncryptedFileJob(AccountPtr account, const QUrl &url, QI
       _encryptedInfo(encryptedInfo),
       _totalSize(totalSize)
 {
-    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(encryptedInfo.encryptionKey, encryptedInfo.initializationVector, totalSize));
+    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(_device, encryptedInfo.encryptionKey, encryptedInfo.initializationVector, totalSize));
 }
 
 GETEncryptedFileJob::~GETEncryptedFileJob()
@@ -408,23 +409,15 @@ GETEncryptedFileJob::~GETEncryptedFileJob()
 
 qint64 GETEncryptedFileJob::writeToDevice(const char *data, qint64 len)
 {
-    _writtenSoFar += len;
+    auto sizeWritten = _decryptor->chunkDecryption(data, len);
 
-    QByteArray out;
-    QByteArray in(data, len);
+    _writtenSoFar += sizeWritten;
 
-    bool result = _decryptor->chunkDecryption(in, out);
+    qCCritical(lcPropagateDownload) << "sizeWritten" << sizeWritten << "len" << len << "_writtenSoFar" << _writtenSoFar;
 
-    auto outSize = out.size();
-    auto sizeWritten = _device->write(out.constData(), out.size());
-
-    qCCritical(lcPropagateDownload) << "outSize" << outSize << "sizeWritten" << sizeWritten << "len" << len << "_writtenSoFar" << _writtenSoFar;
-
-    if (result && _decryptor->isFinished()) {
-        QTimer::singleShot(5000, this, [this]() {
-            emit decryptionFinishedSignal();
-        });
-        //deleteLater();
+    if (sizeWritten != -1 && _decryptor->isFinished()) {
+        emit decryptionFinishedSignal();
+        deleteLater();
     }
 
     return len;
