@@ -147,11 +147,8 @@ signals:
     void decryptionFinishedSignal();
 
 private:
-    EncryptedFile _encryptedInfo;
     QSharedPointer<EncryptionHelper::StreamingDecryptor> _decryptor;
-    qint64 _totalSize = 0;
     qint64 _writtenSoFar = 0;
-    QBuffer _buffer;
 };
 
 /**

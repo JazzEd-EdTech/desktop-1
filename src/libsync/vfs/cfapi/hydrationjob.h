@@ -106,9 +106,6 @@ private:
     QLocalSocket *_signalSocket = nullptr;
     GETFileJob *_job = nullptr;
 
-    QBuffer _encryptedFileBiffer;
-
-    QScopedPointer<EncryptionHelper::StreamingDecryptor> _decryptor;
     Status _status = Success;
 };
 

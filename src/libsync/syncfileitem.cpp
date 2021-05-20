@@ -13,6 +13,7 @@
  */
 
 #include "syncfileitem.h"
+#include "common/constants.h"
 #include "common/syncjournalfilerecord.h"
 #include "common/utility.h"
 #include "filesystem.h"
@@ -40,6 +41,7 @@ SyncJournalFileRecord SyncFileItem::toSyncJournalFileRecordWithInode(const QStri
     rec._etag = _etag;
     rec._fileId = _fileId;
     rec._fileSize = _size;
+    rec._fileSizeE2EE = _sizeE2ee;
     rec._remotePerm = _remotePerm;
     rec._serverHasIgnoredFiles = _serverHasIgnoredFiles;
     rec._checksumHeader = _checksumHeader;
@@ -70,12 +72,25 @@ SyncFileItemPtr SyncFileItem::fromSyncJournalFileRecord(const SyncJournalFileRec
     item->_etag = rec._etag;
     item->_fileId = rec._fileId;
     item->_size = rec._fileSize;
+    item->_sizeE2ee = rec._fileSizeE2EE;
     item->_remotePerm = rec._remotePerm;
     item->_serverHasIgnoredFiles = rec._serverHasIgnoredFiles;
     item->_checksumHeader = rec._checksumHeader;
     item->_encryptedFileName = rec.e2eMangledName();
     item->_isEncrypted = rec._isE2eEncrypted;
     return item;
+}
+
+qint64 SyncFileItem::sizeForVfsPlaceholder() const
+{
+    if (_sizeE2ee != 0) {
+        if (_sizeE2ee - _size == OCC::CommonConstants::e2EeTagSize) {
+            return _sizeE2ee - OCC::CommonConstants::e2EeTagSize;
+        } else {
+            return _size;
+        }
+    }
+    return (!isDirectory() && (_isEncrypted || !_encryptedFileName.isEmpty())) ? _size - OCC::CommonConstants::e2EeTagSize : _size;
 }
 
 }

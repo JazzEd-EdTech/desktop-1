@@ -25,6 +25,7 @@
 #include <QFile>
 #include <QThreadPool>
 #include "common/checksums.h"
+#include "common/constants.h"
 #include "csync_exclude.h"
 #include "csync.h"
 
@@ -504,6 +505,11 @@ void ProcessDirectoryJob::processFileAnalyzeRemoteInfo(
     item->_modtime = serverEntry.modtime;
     item->_size = serverEntry.size;
 
+    if (!serverEntry.e2eMangledName.isEmpty()) {
+        // we've received an encrypted server entry, so, we must store it's actual size (including the encryption tag at the end)
+        item->_sizeE2ee = serverEntry.size;
+    }
+
     auto postProcessServerNew = [=] () {
         auto tmp_path = path;
         if (item->isDirectory()) {
@@ -526,6 +532,9 @@ void ProcessDirectoryJob::processFileAnalyzeRemoteInfo(
             && _pinState != PinState::AlwaysLocal
             && !FileSystem::isExcludeFile(item->_file)) {
             item->_type = ItemTypeVirtualFile;
+            if (!item->_encryptedFileName.isEmpty()) {
+                item->_size = serverEntry.size - OCC::CommonConstants::e2EeTagSize;
+            }
             if (isVfsWithSuffix())
                 addVirtualFileSuffix(tmp_path._original);
         }

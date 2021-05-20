@@ -80,7 +80,6 @@ GETFileJob::GETFileJob(AccountPtr account, const QString &path, QIODevice *devic
     const QMap<QByteArray, QByteArray> &headers, const QByteArray &expectedEtagForResume,
     qint64 resumeStart, QObject *parent)
     : AbstractNetworkJob(account, path, parent)
-    , _device(device)
     , _headers(headers)
     , _expectedEtagForResume(expectedEtagForResume)
     , _expectedContentLength(-1)
@@ -93,14 +92,14 @@ GETFileJob::GETFileJob(AccountPtr account, const QString &path, QIODevice *devic
     , _bandwidthManager(nullptr)
     , _hasEmittedFinishedSignal(false)
     , _lastModified()
+    , _device(device)
 {
- }
+}
 
 GETFileJob::GETFileJob(AccountPtr account, const QUrl &url, QIODevice *device,
     const QMap<QByteArray, QByteArray> &headers, const QByteArray &expectedEtagForResume,
     qint64 resumeStart, QObject *parent)
     : AbstractNetworkJob(account, url.toEncoded(), parent)
-    , _device(device)
     , _headers(headers)
     , _expectedEtagForResume(expectedEtagForResume)
     , _expectedContentLength(-1)
@@ -114,6 +113,7 @@ GETFileJob::GETFileJob(AccountPtr account, const QUrl &url, QIODevice *device,
     , _bandwidthManager(nullptr)
     , _hasEmittedFinishedSignal(false)
     , _lastModified()
+    , _device(device)
 {
 }
 
@@ -386,21 +386,17 @@ QString GETFileJob::errorString() const
 GETEncryptedFileJob::GETEncryptedFileJob(AccountPtr account, const QString &path, QIODevice *device,
     const QMap<QByteArray, QByteArray> &headers, const QByteArray &expectedEtagForResume,
     qint64 resumeStart, EncryptedFile encryptedInfo, qint64 totalSize, QObject *parent)
-    : GETFileJob(account, path, device, headers, expectedEtagForResume, resumeStart, parent),
-      _encryptedInfo(encryptedInfo),
-      _totalSize(totalSize)
+    : GETFileJob(account, path, device, headers, expectedEtagForResume, resumeStart, parent)
 {
-    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(_device, encryptedInfo.encryptionKey, encryptedInfo.initializationVector, totalSize));
+    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(encryptedInfo.encryptionKey, encryptedInfo.initializationVector, totalSize));
 }
 
 GETEncryptedFileJob::GETEncryptedFileJob(AccountPtr account, const QUrl &url, QIODevice *device,
     const QMap<QByteArray, QByteArray> &headers, const QByteArray &expectedEtagForResume,
     qint64 resumeStart, EncryptedFile encryptedInfo, qint64 totalSize, QObject *parent)
-    : GETFileJob(account, url, device, headers, expectedEtagForResume, resumeStart, parent),
-      _encryptedInfo(encryptedInfo),
-      _totalSize(totalSize)
+    : GETFileJob(account, url, device, headers, expectedEtagForResume, resumeStart, parent)
 {
-    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(_device, encryptedInfo.encryptionKey, encryptedInfo.initializationVector, totalSize));
+    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(encryptedInfo.encryptionKey, encryptedInfo.initializationVector, totalSize));
 }
 
 GETEncryptedFileJob::~GETEncryptedFileJob()
@@ -409,13 +405,22 @@ GETEncryptedFileJob::~GETEncryptedFileJob()
 
 qint64 GETEncryptedFileJob::writeToDevice(const char *data, qint64 len)
 {
-    auto sizeWritten = _decryptor->chunkDecryption(data, len);
+    if (!_decryptor->isInitialized()) {
+        return -1;
+    }
 
-    _writtenSoFar += sizeWritten;
+    const auto bytesDecrypted = _decryptor->chunkDecryption(data, _device, len);
 
-    qCCritical(lcPropagateDownload) << "sizeWritten" << sizeWritten << "len" << len << "_writtenSoFar" << _writtenSoFar;
+    if (bytesDecrypted == -1) {
+        qCCritical(lcPropagateDownload) << "Decryption failed!";
+        return -1;
+    }
 
-    if (sizeWritten != -1 && _decryptor->isFinished()) {
+    _writtenSoFar += bytesDecrypted;
+
+    qCCritical(lcPropagateDownload) << "bytesDecrypted" << bytesDecrypted << "len" << len << "_writtenSoFar" << _writtenSoFar;
+
+    if (bytesDecrypted != -1 && _decryptor->isFinished()) {
         emit decryptionFinishedSignal();
         deleteLater();
     }
@@ -1141,6 +1146,11 @@ void PropagateDownloadFile::downloadFinished()
     }
 
     FileSystem::setFileHidden(fn, false);
+
+    if (!_item->_encryptedFileName.isEmpty() && _item->_sizeE2ee == 0) {
+        // if it's an encrypted file, we must store it's size with encryption tag included at the end
+        _item->_sizeE2ee = _item->_size;
+    }
 
     // Maybe we downloaded a newer version of the file than we thought we would...
     // Get up to date information for the journal.

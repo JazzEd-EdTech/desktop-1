@@ -184,6 +184,9 @@ void PropagateUploadEncrypted::slotFolderEncryptedMetadataReceived(const QJsonDo
         return;
       }
 
+      // we must store the actual size of encrypted file we've just uploaded (including the tag at the end)
+      _item->_sizeE2ee = output.size();
+
       encryptedFile.authenticationTag = tag;
       _completeFileName = output.fileName();
   }
