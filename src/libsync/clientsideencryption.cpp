@@ -36,8 +36,8 @@
 #include <QRandomGenerator>
 
 #include <qt5keychain/keychain.h>
-#include "common/utility.h"
-#include "common/constants.h"
+#include <common/utility.h>
+#include <common/constants.h>
 
 #include "wordlist.h"
 

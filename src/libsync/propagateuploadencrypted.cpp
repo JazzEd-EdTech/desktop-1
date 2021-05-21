@@ -3,6 +3,7 @@
 #include "networkjobs.h"
 #include "clientsideencryption.h"
 #include "account.h"
+#include <common/constants.h>
 
 #include <QFileInfo>
 #include <QDir>
@@ -184,8 +185,12 @@ void PropagateUploadEncrypted::slotFolderEncryptedMetadataReceived(const QJsonDo
         return;
       }
 
-      // we must store the actual size of encrypted file we've just uploaded (including the tag at the end)
-      _item->_sizeE2ee = output.size();
+      // we must store the non encrypted file size (without encryption tag)
+      _item->_sizeNonE2EE = input.size();
+      Q_ASSERT(_item->_sizeNonE2EE + OCC::CommonConstants::e2EeTagSize == output.size());
+      if (_item->_sizeNonE2EE + OCC::CommonConstants::e2EeTagSize != output.size()) {
+          qCritical(lcPropagateUploadEncrypted) << "Uploaded encerypted file with incorrect tag lenth!";
+      }
 
       encryptedFile.authenticationTag = tag;
       _completeFileName = output.fileName();

@@ -263,7 +263,7 @@ public:
     time_t _modtime = 0;
     QByteArray _etag;
     qint64 _size = 0;
-    qint64 _sizeE2ee = 0;
+    qint64 _sizeNonE2EE = 0;
     quint64 _inode = 0;
     QByteArray _fileId;
 
@@ -277,6 +277,7 @@ public:
 
     // The size and modtime of the file getting overwritten (on the disk for downloads, on the server for uploads).
     qint64 _previousSize = 0;
+    qint64 _previousSizeNonE2EE = 0;
     time_t _previousModtime = 0;
 
     QString _directDownloadUrl;
