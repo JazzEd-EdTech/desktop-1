@@ -298,7 +298,7 @@ namespace {
     };
 
     QByteArray BIO2ByteArray(Bio &b) {
-        int pending = BIO_ctrl_pending(b);
+        int pending = static_cast<int>(BIO_ctrl_pending(b));
         QByteArray res(pending, '\0');
         BIO_read(b, unsignedData(res), pending);
         return res;
@@ -756,7 +756,7 @@ QByteArray decryptStringAsymmetric(EVP_PKEY *privateKey, const QByteArray& data)
         qCInfo(lcCseDecryption()) << "Size of data is: " << data.size();
     }
 
-    QByteArray out(outlen, '\0');
+    QByteArray out(static_cast<int>(outlen), '\0');
 
     if (EVP_PKEY_decrypt(ctx, unsignedData(out), &outlen, (unsigned char *)data.constData(), data.size()) <= 0) {
         const auto error = handleErrors();
@@ -807,7 +807,7 @@ QByteArray encryptStringAsymmetric(EVP_PKEY *publicKey, const QByteArray& data) 
         qCInfo(lcCse()) << "Encryption Length:" << outLen;
     }
 
-    QByteArray out(outLen, '\0');
+    QByteArray out(static_cast<int>(outLen), '\0');
     if (EVP_PKEY_encrypt(ctx, unsignedData(out), &outLen, (unsigned char *)data.constData(), data.size()) != 1) {
         qCInfo(lcCse()) << "Could not encrypt key." << err;
         exit(1);
@@ -1807,10 +1807,6 @@ EncryptionHelper::StreamingDecryptor::StreamingDecryptor(const QByteArray &key, 
     }
 }
 
-EncryptionHelper::StreamingDecryptor::~StreamingDecryptor()
-{
-}
-
 qint32 EncryptionHelper::StreamingDecryptor::chunkDecryption(const char *input, QIODevice *output, quint32 chunkSize)
 {
     Q_ASSERT(isInitialized());
@@ -1850,7 +1846,7 @@ qint32 EncryptionHelper::StreamingDecryptor::chunkDecryption(const char *input, 
     const bool isLastChunk = _decryptedSoFar + chunkSize == _totalSize;
 
     // last OCC::CommonConstants::e2EeTagSize bytes is ALWAYS a tag!!!
-    const int size = isLastChunk ? chunkSize - OCC::CommonConstants::e2EeTagSize : chunkSize;
+    const qint32 size = isLastChunk ? static_cast<qint32>(chunkSize) - OCC::CommonConstants::e2EeTagSize : static_cast<qint32>(chunkSize);
 
     Q_ASSERT(size >= 0);
 

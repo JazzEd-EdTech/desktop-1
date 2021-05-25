@@ -95,7 +95,7 @@ private:
 class StreamingDecryptor {
 public:
     StreamingDecryptor(const QByteArray &key, const QByteArray &iv, quint64 totalSize);
-    ~StreamingDecryptor();
+    ~StreamingDecryptor() = default;
 
     qint32 chunkDecryption(const char *input, QIODevice *output, quint32 chunkSize);
 
