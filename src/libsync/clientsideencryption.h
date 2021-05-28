@@ -109,7 +109,6 @@ private:
     bool _isInitialized = false;
     bool _isFinished = false;
     quint64 _decryptedSoFar = 0;
-    quint64 _writtenSoFar = 0;
     quint64 _totalSize = 0;
 };
 };

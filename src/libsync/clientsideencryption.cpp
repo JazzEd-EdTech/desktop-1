@@ -1849,7 +1849,6 @@ qint32 EncryptionHelper::StreamingDecryptor::chunkDecryption(const char *input, 
     const qint32 size = isLastChunk ? static_cast<qint32>(chunkSize) - OCC::CommonConstants::e2EeTagSize : static_cast<qint32>(chunkSize);
 
     Q_ASSERT(size >= 0);
-
     if (size < 0) {
         qCritical(lcCse()) << "Decryption failed. Invalid input!";
         return -1;
@@ -1861,10 +1860,11 @@ qint32 EncryptionHelper::StreamingDecryptor::chunkDecryption(const char *input, 
     int inputPos = 0;
 
     while(inputPos < size) {
+        // read blockSize or less bytes
         QByteArray encryptedBlock = QByteArray(input + inputPos, qMin(size - inputPos, blockSize));
 
         if (encryptedBlock.size() == 0) {
-            qCritical(lcCse()) << "Could not read data from file";
+            qCritical(lcCse()) << "Could not read data from the input buffer.";
             return -1;
         }
 
@@ -1885,12 +1885,15 @@ qint32 EncryptionHelper::StreamingDecryptor::chunkDecryption(const char *input, 
 
         bytesWritten += writtenToOutput;
 
+        // advance input position for further read
         inputPos += encryptedBlock.size();
 
         _decryptedSoFar += encryptedBlock.size();
     }
 
     if (isLastChunk) {
+        // if it's a last chunk, we'd need to read a tag at the end and finalize the decryption
+
         Q_ASSERT(chunkSize - inputPos == OCC::CommonConstants::e2EeTagSize);
         if (chunkSize - inputPos != OCC::CommonConstants::e2EeTagSize) {
             qCritical(lcCse()) << "Decryption failed. E2EE tag is missing!";
@@ -1929,7 +1932,7 @@ qint32 EncryptionHelper::StreamingDecryptor::chunkDecryption(const char *input, 
 
     qCDebug(lcCse()) <<"Decrypting:" << _decryptedSoFar << "/" << _totalSize;
 
-    if (_isFinished) {
+    if (isFinished()) {
         qCDebug(lcCse()) << "Decryption complete";
     }
 

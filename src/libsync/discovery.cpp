@@ -1199,8 +1199,10 @@ void ProcessDirectoryJob::processFileConflict(const SyncFileItemPtr &item, Proce
             rec._fileId = serverEntry.fileId;
             rec._modtime = serverEntry.modtime;
             rec._type = item->_type;
-            // do we also need non-E2EE size here?
             rec._fileSize = serverEntry.size;
+            if (!serverEntry.e2eMangledName.isEmpty()) {
+                rec._fileSizeNonE2EE = serverEntry.size - OCC::CommonConstants::e2EeTagSize;
+            }
             rec._remotePerm = serverEntry.remotePerm;
             rec._checksumHeader = serverEntry.checksumHeader;
             _discoveryData->_statedb->setFileRecord(rec);

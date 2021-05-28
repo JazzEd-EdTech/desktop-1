@@ -43,11 +43,11 @@ SyncJournalFileRecord SyncFileItem::toSyncJournalFileRecordWithInode(const QStri
     rec._fileSize = _size;
     Q_ASSERT(!_encryptedFileName.isEmpty() || _sizeNonE2EE == 0);
     if (_encryptedFileName.isEmpty() && _sizeNonE2EE != 0) {
-        qCWarning(lcFileItem) << "_sizeNonE2EE is non-zero for non-encrypted item.";
+        qCWarning(lcFileItem) << "_sizeNonE2EE is non-zero for a non-encrypted item.";
     }
     Q_ASSERT(_encryptedFileName.isEmpty() || _sizeNonE2EE != 0);
     if (!_encryptedFileName.isEmpty() && _sizeNonE2EE == 0) {
-        qCWarning(lcFileItem) << "_sizeNonE2EE iszero for encrypted item.";
+        qCWarning(lcFileItem) << "_sizeNonE2EE is zero for an encrypted item.";
     }
     rec._fileSizeNonE2EE = _sizeNonE2EE;
     rec._remotePerm = _remotePerm;

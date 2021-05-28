@@ -145,7 +145,6 @@ protected:
 
 private:
     QSharedPointer<EncryptionHelper::StreamingDecryptor> _decryptor;
-    qint64 _writtenSoFar = 0;
 };
 
 /**
