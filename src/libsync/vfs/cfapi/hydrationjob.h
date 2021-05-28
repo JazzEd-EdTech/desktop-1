@@ -100,6 +100,11 @@ private:
     QString _requestId;
     QString _folderPath;
 
+    bool _isEncryptedFile = false;
+    QString _encryptedFileName;
+
+    qint64 _fileTotalSize = 0;
+
     QLocalServer *_transferDataServer = nullptr;
     QLocalServer *_signalServer = nullptr;
     QLocalSocket *_transferDataSocket = nullptr;
