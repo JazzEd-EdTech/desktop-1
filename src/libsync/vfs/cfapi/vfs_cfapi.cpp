@@ -114,7 +114,7 @@ Result<void, QString> VfsCfApi::updateMetadata(const QString &filePath, time_t m
         return cfapi::updatePlaceholderInfo(handle, modtime, size, fileId);
     } else {
         qCWarning(lcCfApi) << "Couldn't update metadata for non existing file" << localPath;
-        return "Couldn't update metadata";
+        return { "Couldn't update metadata" };
     }
 }
 
@@ -455,5 +455,3 @@ VfsCfApi::HydratationAndPinStates VfsCfApi::computeRecursiveHydrationAndPinState
 }
 
 } // namespace OCC
-
-OCC_DEFINE_VFS_FACTORY("win", OCC::VfsCfApi)
