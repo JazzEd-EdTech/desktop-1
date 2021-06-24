@@ -13,6 +13,7 @@ macro(nextcloud_add_test test_class)
       testutils
       nextcloudCore
       cmdCore
+      "${synclib_NAME}_vfs_cfapi"
       Qt5::Test
       Qt5::Quick
     )
