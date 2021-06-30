@@ -43,6 +43,8 @@ public:
         return !_path.isEmpty();
     }
 
+    qint64 encryptedSize() const;
+
     /** Returns the numeric part of the full id in _fileId.
      *
      * On the server this is sometimes known as the internal file id.
@@ -65,7 +67,6 @@ public:
     QByteArray _etag;
     QByteArray _fileId;
     qint64 _fileSize = 0;
-    qint64 _fileSizeNonE2EE = 0;
     RemotePermissions _remotePerm;
     bool _serverHasIgnoredFiles = false;
     QByteArray _checksumHeader;

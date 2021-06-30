@@ -330,14 +330,7 @@ void OCC::HydrationJob::finalize(OCC::VfsCfApi *vfs)
     }
 
     record._type = ItemTypeFile;
-
-    const auto fileSizeOnDisk = FileSystem::getSize(localPath() + folderPath());
-    if (!record._e2eMangledName.isEmpty()) {
-        record._fileSizeNonE2EE = fileSizeOnDisk;
-        record._fileSize = fileSizeOnDisk;
-    } else {
-        record._fileSize = fileSizeOnDisk;
-    }
+    record._fileSize = FileSystem::getSize(localPath() + folderPath());
 
     _journal->setFileRecord(record);
 }
