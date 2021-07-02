@@ -34,7 +34,6 @@ class GETFileJob : public AbstractNetworkJob
     QString _errorString;
     QByteArray _expectedEtagForResume;
     qint64 _expectedContentLength;
-    qint64 _contentLength;
     qint64 _resumeStart;
     SyncFileItem::Status _errorStatus;
     QUrl _directDownloadUrl;
@@ -51,6 +50,7 @@ class GETFileJob : public AbstractNetworkJob
 
 protected:
     QIODevice *_device;
+    qint64 _contentLength;
 
 public:
     // DOES NOT take ownership of the device.
@@ -113,6 +113,7 @@ public:
 
 protected:
     virtual qint64 writeToDevice(const char *data, qint64 len);
+    virtual void processMetaData() { }
 
 signals:
     void finishedSignal();
@@ -141,10 +142,12 @@ public:
     virtual ~GETEncryptedFileJob() = default;
 
 protected:
-    virtual qint64 writeToDevice(const char *data, qint64 len);
+    virtual qint64 writeToDevice(const char *data, qint64 len) override;
+    virtual void processMetaData() override;
 
 private:
     QSharedPointer<EncryptionHelper::StreamingDecryptor> _decryptor;
+    EncryptedFile _encryptedFileInfo = {};
 };
 
 /**

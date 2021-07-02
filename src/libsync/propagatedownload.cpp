@@ -258,6 +258,8 @@ void GETFileJob::slotMetaDataChanged()
     }
 
     _saveBodyToFile = true;
+
+    processMetaData();
 }
 
 void GETFileJob::setBandwidthManager(BandwidthManager *bwm)
@@ -388,16 +390,16 @@ GETEncryptedFileJob::GETEncryptedFileJob(AccountPtr account, const QString &path
     const QMap<QByteArray, QByteArray> &headers, const QByteArray &expectedEtagForResume,
     qint64 resumeStart, EncryptedFile encryptedInfo, qint64 totalSize, QObject *parent)
     : GETFileJob(account, path, device, headers, expectedEtagForResume, resumeStart, parent)
+    , _encryptedFileInfo(encryptedInfo)
 {
-    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(encryptedInfo.encryptionKey, encryptedInfo.initializationVector, totalSize));
 }
 
 GETEncryptedFileJob::GETEncryptedFileJob(AccountPtr account, const QUrl &url, QIODevice *device,
     const QMap<QByteArray, QByteArray> &headers, const QByteArray &expectedEtagForResume,
     qint64 resumeStart, EncryptedFile encryptedInfo, qint64 totalSize, QObject *parent)
     : GETFileJob(account, url, device, headers, expectedEtagForResume, resumeStart, parent)
+    , _encryptedFileInfo(encryptedInfo)
 {
-    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(encryptedInfo.encryptionKey, encryptedInfo.initializationVector, totalSize));
 }
 
 qint64 GETEncryptedFileJob::writeToDevice(const char *data, qint64 len)
@@ -414,6 +416,11 @@ qint64 GETEncryptedFileJob::writeToDevice(const char *data, qint64 len)
     }
 
     return len;
+}
+
+void GETEncryptedFileJob::processMetaData()
+{
+    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(_encryptedFileInfo.encryptionKey, _encryptedFileInfo.initializationVector, _contentLength));
 }
 
 void PropagateDownloadFile::start()
