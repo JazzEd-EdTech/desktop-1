@@ -43,8 +43,6 @@ public:
         return !_path.isEmpty();
     }
 
-    qint64 encryptedSize() const;
-
     /** Returns the numeric part of the full id in _fileId.
      *
      * On the server this is sometimes known as the internal file id.

@@ -33,11 +33,6 @@ QByteArray SyncJournalFileRecord::numericFileId() const
     return _fileId;
 }
 
-qint64 SyncJournalFileRecord::encryptedSize() const
-{
-    return !_e2eMangledName.isEmpty() &&  isVirtualFile() ? _fileSize + CommonConstants::e2EeTagSize : _fileSize;
-}
-
 bool SyncJournalErrorBlacklistRecord::isValid() const
 {
     return !_file.isEmpty()

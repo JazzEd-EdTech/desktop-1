@@ -135,10 +135,10 @@ public:
     // DOES NOT take ownership of the device.
     explicit GETEncryptedFileJob(AccountPtr account, const QString &path, QIODevice *device,
         const QMap<QByteArray, QByteArray> &headers, const QByteArray &expectedEtagForResume,
-        qint64 resumeStart, EncryptedFile encryptedInfo, qint64 totalSize, QObject *parent = nullptr);
+        qint64 resumeStart, EncryptedFile encryptedInfo, QObject *parent = nullptr);
     explicit GETEncryptedFileJob(AccountPtr account, const QUrl &url, QIODevice *device,
         const QMap<QByteArray, QByteArray> &headers, const QByteArray &expectedEtagForResume,
-        qint64 resumeStart, EncryptedFile encryptedInfo, qint64 totalSize, QObject *parent = nullptr);
+        qint64 resumeStart, EncryptedFile encryptedInfo, QObject *parent = nullptr);
     virtual ~GETEncryptedFileJob() = default;
 
 protected:

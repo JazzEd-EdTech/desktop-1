@@ -66,9 +66,6 @@ public:
     QString encryptedFileName() const;
     void setEncryptedFileName(const QString &encryptedName);
 
-    qint64 fileTotalSize() const;
-    void setFileTotalSize(qint64 totalSize);
-
     Status status() const;
 
     void start();
@@ -102,8 +99,6 @@ private:
 
     bool _isEncryptedFile = false;
     QString _encryptedFileName;
-
-    qint64 _fileTotalSize = 0;
 
     QLocalServer *_transferDataServer = nullptr;
     QLocalServer *_signalServer = nullptr;

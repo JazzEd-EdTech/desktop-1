@@ -111,15 +111,6 @@ void OCC::HydrationJob::setEncryptedFileName(const QString &encryptedName)
     _encryptedFileName = encryptedName;
 }
 
-qint64 OCC::HydrationJob::fileTotalSize() const
-{
-    return _fileTotalSize;
-}
-void OCC::HydrationJob::setFileTotalSize(qint64 totalSize)
-{
-    _fileTotalSize = totalSize;
-}
-
 OCC::HydrationJob::Status OCC::HydrationJob::status() const
 {
     return _status;
@@ -217,7 +208,7 @@ void OCC::HydrationJob::slotCheckFolderEncryptedMetadata(const QJsonDocument &js
 
             qCDebug(lcHydration) << "Found matching encrypted metadata for file, starting download" << _requestId << _folderPath;
             _transferDataSocket = _transferDataServer->nextPendingConnection();
-            _job = new GETEncryptedFileJob(_account, _remotePath + encryptedFileName(), _transferDataSocket, {}, {}, 0, encryptedInfo, fileTotalSize(), this);
+            _job = new GETEncryptedFileJob(_account, _remotePath + encryptedFileName(), _transferDataSocket, {}, {}, 0, encryptedInfo, this);
 
             connect(qobject_cast<GETEncryptedFileJob *>(_job), &GETEncryptedFileJob::finishedSignal, this, &HydrationJob::onGetFinished);
             _job->start();
