@@ -1046,7 +1046,7 @@ void PropagateDownloadFile::contentChecksumComputed(const QByteArray &checksumTy
     if (_isEncrypted) {
         const auto encryptedSize = _tmpFile.size();
         if (_downloadEncryptedHelper->decryptFile(_tmpFile)) {
-          downloadFinished(_item->_size);
+          downloadFinished();
         } else {
           done(SyncFileItem::NormalError, _downloadEncryptedHelper->errorString());
         }
@@ -1056,7 +1056,7 @@ void PropagateDownloadFile::contentChecksumComputed(const QByteArray &checksumTy
     }
 }
 
-void PropagateDownloadFile::downloadFinished(qint64 encryptedFileSize)
+void PropagateDownloadFile::downloadFinished()
 {
     ASSERT(!_tmpFile.isOpen());
     QString fn = propagator()->fullLocalPath(_item->_file);
