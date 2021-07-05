@@ -26,8 +26,7 @@
 #include "common/asserts.h"
 #include "clientsideencryptionjobs.h"
 #include "propagatedownloadencrypted.h"
-#include <common/vfs.h>
-#include <common/constants.h>
+#include "common/vfs.h"
 
 #include "configfile.h"
 
@@ -420,7 +419,11 @@ qint64 GETEncryptedFileJob::writeToDevice(const char *data, qint64 len)
 
 void GETEncryptedFileJob::processMetaData()
 {
-    _decryptor.reset(new EncryptionHelper::StreamingDecryptor(_encryptedFileInfo.encryptionKey, _encryptedFileInfo.initializationVector, _contentLength));
+    if (!_decryptor) {
+        // only initialize the decryptor once, because, according to Qt documentation, metadata might get changed during the processing of the data sometimes
+        // https://doc.qt.io/qt-5/qnetworkreply.html#metaDataChanged
+        _decryptor.reset(new EncryptionHelper::StreamingDecryptor(_encryptedFileInfo.encryptionKey, _encryptedFileInfo.initializationVector, _contentLength));
+    }
 }
 
 void PropagateDownloadFile::start()
@@ -1044,7 +1047,6 @@ void PropagateDownloadFile::contentChecksumComputed(const QByteArray &checksumTy
     _item->_checksumHeader = makeChecksumHeader(checksumType, checksum);
 
     if (_isEncrypted) {
-        const auto encryptedSize = _tmpFile.size();
         if (_downloadEncryptedHelper->decryptFile(_tmpFile)) {
           downloadFinished();
         } else {
@@ -1145,9 +1147,7 @@ void PropagateDownloadFile::downloadFinished()
 
     // Maybe we downloaded a newer version of the file than we thought we would...
     // Get up to date information for the journal.
-    const auto sizeOnDisk = FileSystem::getSize(fn);
-
-    _item->_size = sizeOnDisk;
+    _item->_size = FileSystem::getSize(fn);
 
     // Maybe what we downloaded was a conflict file? If so, set a conflict record.
     // (the data was prepared in slotGetFinished above)

@@ -18,7 +18,6 @@
 
 #include "common/syncjournalfilerecord.h"
 #include "common/utility.h"
-#include <common/constants.h>
 
 namespace OCC {
 

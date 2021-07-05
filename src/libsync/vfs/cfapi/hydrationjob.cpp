@@ -162,12 +162,14 @@ void OCC::HydrationJob::start()
 
 void OCC::HydrationJob::slotFolderIdError()
 {
+    // TODO: the following code is borrowed from PropagateDownloadEncrypted (see HydrationJob::onNewConnection() for explanation of next steps)
     qCCritical(lcHydration) << "Failed to get encrypted metadata of folder" << _requestId << _localPath << _folderPath;
     emitFinished(Error);
 }
 
 void OCC::HydrationJob::slotCheckFolderId(const QStringList &list)
 {
+    // TODO: the following code is borrowed from PropagateDownloadEncrypted (see HydrationJob::onNewConnection() for explanation of next steps)
     auto job = qobject_cast<LsColJob *>(sender());
     const QString folderId = list.first();
     qCDebug(lcHydration) << "Received id of folder" << folderId;
@@ -186,6 +188,7 @@ void OCC::HydrationJob::slotCheckFolderId(const QStringList &list)
 
 void OCC::HydrationJob::slotFolderEncryptedMetadataError(const QByteArray & /*fileId*/, int /*httpReturnCode*/)
 {
+    // TODO: the following code is borrowed from PropagateDownloadEncrypted (see HydrationJob::onNewConnection() for explanation of next steps)
     qCCritical(lcHydration) << "Failed to find encrypted metadata information of remote file" << encryptedFileName();
     emitFinished(Error);
     return;
@@ -193,6 +196,7 @@ void OCC::HydrationJob::slotFolderEncryptedMetadataError(const QByteArray & /*fi
 
 void OCC::HydrationJob::slotCheckFolderEncryptedMetadata(const QJsonDocument &json)
 {
+    // TODO: the following code is borrowed from PropagateDownloadEncrypted (see HydrationJob::onNewConnection() for explanation of next steps)
     qCDebug(lcHydration) << "Metadata Received reading" << encryptedFileName();
     const QString filename = encryptedFileName();
     auto meta = new FolderMetadata(_account, json.toJson(QJsonDocument::Compact));
@@ -268,6 +272,7 @@ void OCC::HydrationJob::onNewConnection()
     Q_ASSERT(!_job);
 
     if (isEncryptedFile()) {
+        // TODO: the following code is borrowed from PropagateDownloadEncrypted (should we factor it out and reuse? YES! Should we do it now? Probably not, as, this would imply modifying PropagateDownloadEncrypted, so we need a separate PR)
         qCInfo(lcHydration) << "Got new connection for encrypted file. Getting required info for decryption...";
         const auto rootPath = [=]() {
             const auto result = _remotePath;
@@ -321,6 +326,7 @@ void OCC::HydrationJob::finalize(OCC::VfsCfApi *vfs)
     }
 
     record._type = ItemTypeFile;
+    // store the actual size of a file that has been decrypted as we will need its actual size when dehydrating it if requested
     record._fileSize = FileSystem::getSize(localPath() + folderPath());
 
     _journal->setFileRecord(record);

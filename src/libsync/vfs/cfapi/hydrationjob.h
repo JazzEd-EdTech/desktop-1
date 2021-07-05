@@ -105,7 +105,6 @@ private:
     QLocalSocket *_transferDataSocket = nullptr;
     QLocalSocket *_signalSocket = nullptr;
     GETFileJob *_job = nullptr;
-
     Status _status = Success;
 };
 

@@ -3,7 +3,6 @@
 #include "networkjobs.h"
 #include "clientsideencryption.h"
 #include "account.h"
-#include <common/constants.h>
 
 #include <QFileInfo>
 #include <QDir>

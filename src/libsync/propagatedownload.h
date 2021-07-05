@@ -113,7 +113,7 @@ public:
 
 protected:
     virtual qint64 writeToDevice(const char *data, qint64 len);
-    virtual void processMetaData() { }
+    virtual void processMetaData() {}
 
 signals:
     void finishedSignal();
