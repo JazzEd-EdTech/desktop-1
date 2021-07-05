@@ -81,12 +81,6 @@ SyncFileItemPtr SyncFileItem::fromSyncJournalFileRecord(const SyncJournalFileRec
 
 qint64 SyncFileItem::sizeForVfsPlaceholder() const
 {
-    if (_type == ItemTypeVirtualFile && !_encryptedFileName.isEmpty() && _direction == SyncFileItem::Down) {
-        // when we have received an encrypted file from the server and want to create a placeholder for it - we must subtract CommonConstants::e2EeTagSize bytes from placeholder's size
-        // this is due to files received from the server include e2ee tag whic equals CommonConstants::e2EeTagSize bytes and those bytes are not included to the file later when we decrypt it
-        return _size - CommonConstants::e2EeTagSize;
-    }
-
     return _size;
 }
 
