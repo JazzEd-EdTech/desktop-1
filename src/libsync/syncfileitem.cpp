@@ -13,9 +13,9 @@
  */
 
 #include "syncfileitem.h"
-#include <common/constants.h>
-#include <common/syncjournalfilerecord.h>
-#include <common/utility.h>
+#include "common/syncjournalfilerecord.h"
+#include "common/utility.h"
+
 #include "filesystem.h"
 
 #include <QLoggingCategory>
@@ -77,11 +77,6 @@ SyncFileItemPtr SyncFileItem::fromSyncJournalFileRecord(const SyncJournalFileRec
     item->_encryptedFileName = rec.e2eMangledName();
     item->_isEncrypted = rec._isE2eEncrypted;
     return item;
-}
-
-qint64 SyncFileItem::sizeForVfsPlaceholder() const
-{
-    return _size;
 }
 
 }

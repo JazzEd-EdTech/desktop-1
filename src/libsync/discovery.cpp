@@ -461,8 +461,9 @@ void ProcessDirectoryJob::processFileAnalyzeRemoteInfo(
         qint64 size = serverEntry.size;
 
         if (dbEntry.isVirtualFile() && (!item->_encryptedFileName.isEmpty()) && size > 0) {
+            // make sure we set correct size when file was downloaded previously and has now been changed on the server
             // serverEntry always includes extra CommonConstants::e2EeTagSize bytes for e2e encrypted files
-            // we don't need those when creating a placeholder
+            // we don't need those neither when creating a placeholder nor when storing hydrated file on disk
             size = serverEntry.size - CommonConstants::e2EeTagSize;
         }
 

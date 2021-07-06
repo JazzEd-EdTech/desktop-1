@@ -202,8 +202,6 @@ public:
             && !(_instruction == CSYNC_INSTRUCTION_CONFLICT && _status == SyncFileItem::Success);
     }
 
-    qint64 sizeForVfsPlaceholder() const;
-
     // Variables useful for everybody
 
     /** The syncfolder-relative filesystem path that the operation is about
